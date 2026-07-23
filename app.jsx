@@ -1,15 +1,15 @@
 // ---- physics constants (illustrative, tuned for feel not real ice) ----
 const { useRef, useEffect, useState, useCallback } = React;
-
+ 
 const R = 19;                 // stone radius (px)
 const FRICTION = 42;          // speed loss per second (px/s^2)
 const STOP_EPS = 3;           // speed below which a stone is "stopped"
 const SUBSTEPS = 6;           // physics substeps per frame (avoid tunneling)
-
+ 
 function dist(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
-
+ 
 function CurlingSimulator() {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
@@ -17,17 +17,17 @@ function CurlingSimulator() {
   const runningRef = useRef(false);
   const contactRef = useRef(null); // {x,y} where shooter first touches the opponent stone
   const trailsRef = useRef({});    // id -> [{x,y}, ...] path taken by each stone while moving
-
+ 
   const [offset, setOffset] = useState(0);      // aim offset in px, - left / + right
   const [speed, setSpeed] = useState(260);       // launch speed px/s
   const [phase, setPhase] = useState("aim");      // "aim" | "running" | "done"
   const [result, setResult] = useState(null);
   const [tick, setTick] = useState(0);            // force redraw during aim
-
+ 
   const W = 520, H = 620;
   const center = { x: W / 2, y: H / 2 + 40 };
   const houseR = { outer: 190, red: 100, tee: 14 };
-
+ 
   const initialStones = useCallback(() => {
     return [
       { id: "opp", team: "opp", x: center.x, y: center.y + 18, vx: 0, vy: 0, moving: false, launched: true, trail: [] },
@@ -35,18 +35,18 @@ function CurlingSimulator() {
       { id: "you-shot", team: "you", x: center.x + offset, y: H - 40, vx: 0, vy: 0, moving: false, launched: false, trail: [] },
     ];
   }, [offset]);
-
+ 
   useEffect(() => {
     stonesRef.current = initialStones();
     draw();
     // eslint-disable-next-line
   }, [offset]);
-
+ 
   useEffect(() => {
     draw();
     // eslint-disable-next-line
   }, [tick]);
-
+ 
   function throwStone() {
     const s = stonesRef.current.find((s) => s.id === "you-shot");
     if (!s) return;
@@ -59,7 +59,7 @@ function CurlingSimulator() {
     setResult(null);
     rafRef.current = requestAnimationFrame(loop);
   }
-
+ 
   function reset() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     runningRef.current = false;
@@ -70,13 +70,13 @@ function CurlingSimulator() {
     setResult(null);
     setTick((t) => t + 1);
   }
-
+ 
   function loop(tPrev) {
     if (!runningRef.current) return;
     const dt = 1 / 60 / SUBSTEPS;
     for (let s = 0; s < SUBSTEPS; s++) step(dt);
     draw();
-
+ 
     const stones = stonesRef.current;
     for (const s of stones) {
       if (s.moving) {
@@ -93,7 +93,7 @@ function CurlingSimulator() {
       computeResult();
     }
   }
-
+ 
   function step(dt) {
     const stones = stonesRef.current;
     // integrate + friction
@@ -140,7 +140,7 @@ function CurlingSimulator() {
       }
     }
   }
-
+ 
   function computeResult() {
     const stones = stonesRef.current;
     const withDist = stones.map((s) => ({
@@ -166,20 +166,20 @@ function CurlingSimulator() {
       count,
     });
   }
-
+ 
   function draw() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, W, H);
-
+ 
     // ice background
     const grad = ctx.createLinearGradient(0, 0, 0, H);
     grad.addColorStop(0, "#eef6fb");
     grad.addColorStop(1, "#dbeaf3");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
-
+ 
     // house rings
     const rings = [
       { r: houseR.outer, color: "#1f6fb2" },
@@ -203,7 +203,7 @@ function CurlingSimulator() {
     ctx.moveTo(center.x - houseR.outer, center.y);
     ctx.lineTo(center.x + houseR.outer, center.y);
     ctx.stroke();
-
+ 
     // aim guide line (only while aiming)
     if (phase === "aim") {
       ctx.save();
@@ -215,7 +215,7 @@ function CurlingSimulator() {
       ctx.stroke();
       ctx.restore();
     }
-
+ 
     // trails: faint dashed light-blue path for each stone that has moved
     ctx.save();
     ctx.setLineDash([5, 5]);
@@ -230,7 +230,7 @@ function CurlingSimulator() {
       ctx.stroke();
     }
     ctx.restore();
-
+ 
     // stones
     for (const s of stonesRef.current) {
       ctx.beginPath();
@@ -246,7 +246,7 @@ function CurlingSimulator() {
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       ctx.fill();
     }
-
+ 
     // contact point where the shooter first touched the opponent stone
     if (contactRef.current) {
       const { x, y } = contactRef.current;
@@ -258,7 +258,7 @@ function CurlingSimulator() {
       ctx.strokeStyle = "#ffffff";
       ctx.stroke();
     }
-
+ 
     // throw direction arrow
     ctx.save();
     ctx.strokeStyle = "#274b63";
@@ -277,7 +277,7 @@ function CurlingSimulator() {
     ctx.fill();
     ctx.restore();
   }
-
+ 
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
@@ -297,7 +297,7 @@ function CurlingSimulator() {
       }}>
         赤 = あなた（後攻）／ 黄 = 敵。狙いのズレと速さを調整して、敵石(黄)だけを弾き出せるか試そう。
       </p>
-
+ 
       <div style={{
         background: "#0b2130", borderRadius: 12, padding: 10,
         boxShadow: "0 8px 24px rgba(0,0,0,0.35)", width: "100%",
@@ -308,7 +308,7 @@ function CurlingSimulator() {
           style={{ borderRadius: 8, display: "block", width: "100%", height: "auto" }}
         />
       </div>
-
+ 
       <div style={{ width: "100%", maxWidth: W, marginTop: 16, color: "#eef6fb", boxSizing: "border-box" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
           <span>狙いのズレ（中心から左右）</span>
@@ -320,7 +320,7 @@ function CurlingSimulator() {
           onChange={(e) => setOffset(parseInt(e.target.value))}
           style={{ width: "100%" }}
         />
-
+ 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginTop: 12, marginBottom: 4 }}>
           <span>初速（ウェイト）</span>
           <span>{speed}px/s</span>
@@ -331,7 +331,7 @@ function CurlingSimulator() {
           onChange={(e) => setSpeed(parseInt(e.target.value))}
           style={{ width: "100%" }}
         />
-
+ 
         <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "center", flexWrap: "wrap" }}>
           <button
             onClick={throwStone}
@@ -356,7 +356,7 @@ function CurlingSimulator() {
             リセット
           </button>
         </div>
-
+ 
         {result && (
           <div style={{
             marginTop: 16, padding: "12px 16px", borderRadius: 8,
@@ -370,5 +370,6 @@ function CurlingSimulator() {
     </div>
   );
 }
-
+ 
 ReactDOM.createRoot(document.getElementById("root")).render(<CurlingSimulator />);
+ 
